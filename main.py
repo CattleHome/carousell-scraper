@@ -3,10 +3,40 @@ import json
 from bs4 import BeautifulSoup
 
 
+class CarousellItem:
+    def __init__(self, seller, time, name, price, desc, used):
+        self.seller = seller
+        self.time = time
+        self.name = name
+        self.price = price
+        self.desc = desc
+        self.used = used
+
+    def toString(self):
+        print(self.seller + '\n' + self.time + '\n' + self.name +
+              '\n' + self.price + '\n' + self.desc + '\n' + self.used)
+
+    def validateItem(self):
+        v = True
+        v = v and (self.time[0].isnumeric() or self.time == "Spotlight") and self.price[0:2] == "S$" and self.used in [
+            "Used", "New"]
+        return v
+
+
 class CarousellSearch:
-    def __init__(self, url="", results=10, query=[]):
-        BASE_URL = "http://sg.carousell.com/search/"
-        self.url = BASE_URL
+
+    BASE_URL = "http://sg.carousell.com/search/"
+
+    def __init__(self, url="", results_count=10, query=[]):
+        self.url = self.BASE_URL
+        self.results = []
+
+    def updateQueriesAndGetResults(self, query_string):
+        print("Getting results from: ", end="")
+        self.addQueries(query_string)
+        self.sendRequest()
+        print("...")
+        print("There are {} results.".format(len(self.results)))
 
     def addQueries(self, query_string):
         self.query = query_string.split(" ")
@@ -19,11 +49,33 @@ class CarousellSearch:
         soup = BeautifulSoup(page.text, 'html.parser')
 
         p_tags = soup.find_all('p')
+        tags = []
         for tag in p_tags:
-            print(tag)
+            tags.append(tag.text)
+        self.results = self.parse_results(tags)
+
+    def clearSearchResults(self):
+        self.url = self.BASE_URL
+        self.results = []
+
+    def parse_results(self, array):
+        new_array = []
+        # find the start of first result; may break on update
+        for i in range(len(array)):
+            if array[i] == "Mailing & Delivery" and array[i-1] == "Meet-up":
+                start_line = i+1
+        for j in range(start_line, len(array), 7):
+            if (array[j] == "Follow us"):
+                break
+            carouResult = CarousellItem(
+                array[j], array[j+1], array[j+2], array[j+3], array[j+4], array[j+5])
+            # just to validate items
+            if carouResult.validateItem() == False:
+                carouResult.toString()
+            new_array.append(carouResult)
+        return new_array
 
 
 if __name__ == "__main__":
     c = CarousellSearch()
-    c.addQueries("iPhone X 256GB")
-    c.sendRequest()
+    c.updateQueriesAndGetResults("iPhone X 256GB")
