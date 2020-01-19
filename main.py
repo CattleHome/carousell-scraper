@@ -13,12 +13,18 @@ class CarousellItem:
         self.used = used
 
     def toString(self):
-        print(self.seller + '\n' + self.time + '\n' + self.name +
-              '\n' + self.price + '\n' + self.desc + '\n' + self.used)
+        print("Seller:" + self.seller)
+        print("Time:" + self.time)
+        print("Name:" + self.name)
+        print("Price:" + self.price)
+        print("Description:" + self.desc)
+        print("Condition:" + self.used)
+        print("\n")
 
-    def validateItem(self):
+    def isValidItem(self):
+        # drops items in spotlight; usually these results are useless
         v = True
-        v = v and (self.time[0].isnumeric() or self.time == "Spotlight") and self.price[0:2] == "S$" and self.used in [
+        v = v and self.time[0].isnumeric() and self.price[0:2] == "S$" and self.used in [
             "Used", "New"]
         return v
 
@@ -69,10 +75,11 @@ class CarousellSearch:
                 break
             carouResult = CarousellItem(
                 array[j], array[j+1], array[j+2], array[j+3], array[j+4], array[j+5])
-            # just to validate items
-            if carouResult.validateItem() == False:
+            # validate items
+            if carouResult.isValidItem():
+                new_array.append(carouResult)
+            else:
                 carouResult.toString()
-            new_array.append(carouResult)
         return new_array
 
 
