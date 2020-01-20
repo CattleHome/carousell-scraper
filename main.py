@@ -1,5 +1,6 @@
 import requests
 import json
+import helper as Helper
 from bs4 import BeautifulSoup
 
 
@@ -24,12 +25,12 @@ class CarousellItem:
     def isValidItem(self):
         # drops items in spotlight; usually these results are useless
         v = True
-        v = v and self.time[0].isnumeric() and self.price[0:2] == "S$" and self.used in [
+        v = v and self.time[0].isnumeric() and self.used in [
             "Used", "New"]
         return v
 
 
-class CarousellSearch:
+class CarousellSearcher:
 
     BASE_URL = "http://sg.carousell.com/search/"
 
@@ -42,7 +43,7 @@ class CarousellSearch:
         self.addQueries(query_string)
         self.sendRequest()
         print("...")
-        print("There are {} results.".format(len(self.results)))
+        self.filterResultsByPrice()
 
     def addQueries(self, query_string):
         self.query = query_string.split(" ")
@@ -74,15 +75,26 @@ class CarousellSearch:
             if (array[j] == "Follow us"):
                 break
             carouResult = CarousellItem(
-                array[j], array[j+1], array[j+2], array[j+3], array[j+4], array[j+5])
+                array[j], array[j+1], array[j+2], Helper.castPriceAsInt(array[j+3]), array[j+4], array[j+5])
             # validate items
             if carouResult.isValidItem():
                 new_array.append(carouResult)
-            else:
-                carouResult.toString()
         return new_array
+
+    def filterResultsByPrice(self):
+        mean = Helper.getMean(self.results)
+        minPrice = 0.6 * mean    # 40% price buffer
+        maxPrice = 1.4 * mean
+        for item in self.results:
+            if not (minPrice < item.price < maxPrice):
+                self.results.remove(item)
+        print("There are {} results.".format(len(self.results)))
+
+    def printCheapest(self):
+        print("Lowest price: S$", Helper.getCheapest(self.results))
 
 
 if __name__ == "__main__":
-    c = CarousellSearch()
+    c = CarousellSearcher()
     c.updateQueriesAndGetResults("iPhone X 256GB")
+    c.printCheapest()
