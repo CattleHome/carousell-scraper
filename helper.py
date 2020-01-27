@@ -14,7 +14,8 @@ def getCheapest(results):
     for item in results:
         if item.price < p:
             p = item.price
-    return p
+            cheapestItem = item
+    return cheapestItem
 
 
 def castPriceAsInt(priceString):

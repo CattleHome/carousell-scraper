@@ -2,32 +2,8 @@ import requests
 import json
 import helper as Helper
 from bs4 import BeautifulSoup
-
-
-class CarousellItem:
-    def __init__(self, seller, time, name, price, desc, used):
-        self.seller = seller
-        self.time = time
-        self.name = name
-        self.price = price
-        self.desc = desc
-        self.used = used
-
-    def toString(self):
-        print("Seller:" + self.seller)
-        print("Time:" + self.time)
-        print("Name:" + self.name)
-        print("Price:" + self.price)
-        print("Description:" + self.desc)
-        print("Condition:" + self.used)
-        print("\n")
-
-    def isValidItem(self):
-        # drops items in spotlight; usually these results are useless
-        v = True
-        v = v and self.time[0].isnumeric() and self.used in [
-            "Used", "New"]
-        return v
+from carousell import CarousellItem
+from fileSaver import FileSaver
 
 
 class CarousellSearcher:
@@ -91,10 +67,25 @@ class CarousellSearcher:
         print("There are {} results.".format(len(self.results)))
 
     def printCheapest(self):
-        print("Lowest price: S$", Helper.getCheapest(self.results))
+        result = Helper.getCheapest(self.results)
+        print("Lowest price: S$", result.price)
 
 
 if __name__ == "__main__":
     c = CarousellSearcher()
     c.updateQueriesAndGetResults("iPhone X 256GB")
     c.printCheapest()
+
+    fs = FileSaver("records.txt")
+    updatedCount = 0
+    for item in c.results:
+        if fs.updateFile(item):
+            updatedCount += 1
+    print("Number of new items:", updatedCount)
+
+    search = input("Enter a seller's id")
+    item = fs.searchFileForItem(search)
+    if item:
+        item.toString()
+    else:
+        print("No such item found.")
